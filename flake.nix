@@ -14,20 +14,31 @@
   outputs = inputs:
     with inputs.flake-utils.lib;
     eachDefaultSystem (system:
+
     let
       pkgs = import inputs.nixpkgs {
         inherit system;
       };
+      utils = inputs.flake-utils.lib;
     in
       rec {
 
         # nix build .#<app>
-        packages = {
-          learn-rust = inputs.naersk.lib."${system}".buildPackage {
-            pname = "learn-rust";
-            root = ./.;
-            buildInputs = with pkgs; [ rustc cargo pkgconfig ];
-            nativeBuildInputs = with pkgs; [ openssl ];
+        packages.learn-rust = inputs.naersk.lib."${system}".buildPackage {
+          pname = "learn-rust";
+          root = ./.;
+          buildInputs = with pkgs; [ rustc cargo pkgconfig ];
+          nativeBuildInputs = with pkgs; [ openssl ];
+        };
+        defaultPackage = packages.learn-rust;
+
+        # nix flake check
+        checks = {
+          pre-commit-check = inputs.pre-commit-hooks.lib.${system}.run {
+            src = ./.;
+            hooks = {
+              rustfmt.enable = true;
+            };
           };
         };
 
@@ -38,9 +49,14 @@
               openssl
               rustc
               rust-analyzer
+              rustfmt
               cargo
               pkg-config
             ];
           };
+
+        # nix run
+        apps.learn-rust = utils.mkApp { name = "learn-rust"; drv = packages.learn-rust; };
+        defaultApp = apps.learn-rust;
       });
 }
