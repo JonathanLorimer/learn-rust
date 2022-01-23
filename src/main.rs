@@ -2,9 +2,13 @@ use std::io;
 use std::cmp::Ordering;
 use rand::Rng;
 mod ownership;
+mod slice_type;
 
 fn main() {
-    guessing_game();
+    // guessing_game();
+    let s = String::from("hello world");
+    let fw = slice_type::first_word(&s);
+    println!("{}", fw);
 }
 
 fn guessing_game() {
